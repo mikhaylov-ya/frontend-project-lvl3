@@ -7,7 +7,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
-    publicPath: '/build',
   },
   module: {
     rules: [
@@ -22,10 +21,6 @@ module.exports = {
         },
       },
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-      {
-        test: /\.scss$/,
-        use: ['style-loader', 'css-loader'],
-      },
       {
         test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         use: 'url-loader?limit=10000',

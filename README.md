@@ -4,4 +4,4 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/2d65dfc59efdb11d8c65/maintainability)](https://codeclimate.com/github/mikhaylov-ya/frontend-project-lvl3/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/2d65dfc59efdb11d8c65/test_coverage)](https://codeclimate.com/github/mikhaylov-ya/frontend-project-lvl3/test_coverage)
 ### Internal tests and linter status:
-![Testing & Linting](https://github.com/mikhaylov-ya/frontend-project-lvl3/actions/workflows/my-check/badge.svg)
+[![Status](https://github.com/mikhaylov-ya/frontend-project-lvl3/workflows/my-check/badge.svg)](https://github.com/mikhaylov-ya/frontend-project-lvl3/actions)
