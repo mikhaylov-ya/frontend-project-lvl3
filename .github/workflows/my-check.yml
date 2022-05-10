@@ -17,7 +17,5 @@ jobs:
         run: make install
       - name: Linter
         run: make lint
-      - name: Tests
-        run: make test
       - name: Status
         run: echo "🍏 Job status is ${{ job.status }}."

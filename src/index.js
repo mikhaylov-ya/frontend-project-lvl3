@@ -1,4 +1,5 @@
 import './style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import app from './app.js';
 
-document.body.classList.add('hello');
+app();
