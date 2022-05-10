@@ -9,7 +9,7 @@ const renderValidation = (validationStatus, message) => {
     case true:
       feedbackMsgElem.classList.remove('text-danger');
       feedbackMsgElem.classList.add('text-success');
-      feedbackMsgElem.textContent = 'Daaaam GOOOD url bro';
+      feedbackMsgElem.textContent = message;
       input.classList.remove('is-invalid');
       input.classList.add('is-valid');
       form.reset();
@@ -30,7 +30,7 @@ export default (state) => {
   const watchedState = onChange(state, (path, val) => {
     if (path === 'form.isValid') {
       console.log(state);
-      renderValidation(val, state.form.errorMsg);
+      renderValidation(val, state.form.message);
     }
   });
   return watchedState;
