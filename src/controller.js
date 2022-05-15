@@ -9,8 +9,13 @@ const addPosts = (html, state) => {
       title: title.textContent,
       description: description.textContent,
       link: link.textContent,
-      pubDate: pubDate.textContent,
+      pubDate: new Date(pubDate.textContent),
     });
+  }); // далее сортируем по дате, чтобы последние посты были сверху
+  state.form.data.posts.sort((a, b) => {
+    const num1 = Number(a.pubDate);
+    const num2 = Number(b.pubDate);
+    return num2 - num1;
   });
 };
 

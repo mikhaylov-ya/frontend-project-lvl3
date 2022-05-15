@@ -24,35 +24,41 @@ const renderValidation = (status, feedbackMsgElem, form) => {
   }
 };
 
-const renderPost = (post, container) => {
-  const postWrapper = document.createElement('div');
-  const normalizedDate = new Date(post.pubDate);
-  const dateOptions = {
-    month: 'long',
-    year: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
+const renderPosts = (posts, container) => {
+  const createCard = (post) => {
+    const card = document.createElement('div');
+    card.classList.add('card', 'my-3');
+    const date = post.pubDate;
+    const dateOptions = {
+      month: 'long',
+      year: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    };
+    card.innerHTML = `
+      <div class="card-body">
+        <h5 class="card-title"><a class="card-link" href="${post.link}" target="_blank">${post.title}</a></h5>
+        <h6 class="card-subtitle mb-2">${date.toLocaleDateString('ru-RU', dateOptions)}</h6>
+        <p class="card-text">${post.description}</p>
+      </div>`;
+    return card;
   };
 
-  postWrapper.innerHTML = `
-  <div class="card my-3">
-    <div class="card-body">
-      <h5 class="card-title"><a class="card-link" href="${post.link}" target="_blank">${post.title}</a></h5>
-      <h6 class="card-subtitle mb-2">${normalizedDate.toLocaleDateString('ru-RU', dateOptions)}</h6>
-      <p class="card-text">${post.description}</p>
-    </div>
-  </div>`;
-  container.prepend(postWrapper);
+  const cards = posts.map(createCard);
+  container.replaceChildren(...cards);
 };
 
-const renderFeed = (feed, container) => {
-  console.log(feed);
-  const feedWrapper = document.createElement('div');
-  feedWrapper.innerHTML = `
-  <p><b>${feed.title}</b></p>
-  <p>${feed.description}</p>`;
-  container.append(feedWrapper);
+const renderFeeds = (feeds, container) => {
+  const feedElems = feeds.map((feed) => {
+    const feedWrapper = document.createElement('div');
+    feedWrapper.innerHTML = `
+    <p><b>${feed.title}</b></p>
+    <p>${feed.description}</p>`;
+    return feedWrapper;
+  });
+
+  container.replaceChildren(...feedElems);
 };
 
 export default (state, containers) => {
@@ -61,12 +67,8 @@ export default (state, containers) => {
       renderValidation(val, containers.feedback, containers.form);
     }
     if (path === 'form.data.feeds') {
-      state.form.data.posts.forEach((post) => {
-        renderPost(post, containers.posts);
-      });
-      state.form.data.feeds.forEach((feed) => {
-        renderFeed(feed, containers.feeds);
-      });
+      renderPosts(state.form.data.posts, containers.posts);
+      renderFeeds(state.form.data.feeds, containers.feeds);
     }
   });
   return watchedState;
