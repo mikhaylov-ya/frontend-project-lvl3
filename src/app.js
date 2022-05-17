@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import axios from 'axios';
 import watcher from './watcher';
 import ru from './locales/ru.js';
-import { addFeed, addPosts } from './controller';
+import addPostsAndFeeds from './controller';
 
 export default () => {
   const state = {
@@ -47,22 +47,19 @@ export default () => {
   form.addEventListener('submit', (e) => {
     const val = input.value;
     e.preventDefault();
+    const submitBtn = e.currentTarget.elements.submit;
     urlSchema.notOneOf(state.form.urls).validate(val, { abortEarly: true })
       .then((res) => {
         if (res) {
+          submitBtn.disabled = true;
           const parser = new DOMParser();
-          axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(val)}`)
+          const query = (value) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(value)}`, { timeout: 10000 })
             .then((response) => {
               if (response.status === 200) return response.data.contents;
-              // Тут ловим сетевую ошибку (можно и через catch)
-              e.stopPropagation();
-              watchedState.form.status = {
-                isValid: false,
-                message: i18nInst.t('errors.network'),
-              };
               return null;
             })
             .then((content) => {
+              submitBtn.disabled = false;
               const streamContent = parser.parseFromString(content, 'application/xml');
               const parserError = streamContent.querySelector('parsererror');
               if (parserError !== null) {
@@ -72,20 +69,35 @@ export default () => {
                 };
                 return;
               }
-              // Добавляем введенный url в стейт только после успешного парсинга
-              state.form.urls.push(val);
+
+              const rssDocument = streamContent.documentElement;
+              setTimeout(() => query(val), 5000);
+              if (state.form.urls.includes(value)) {
+                addPostsAndFeeds(rssDocument, watchedState);
+                return;
+              }
+
               watchedState.form.status = {
                 isValid: true,
                 message: i18nInst.t('validation.success'),
               };
-              const rssDocument = streamContent.documentElement;
-              addPosts(rssDocument, state); // Добавляем в стейт, но не триггерим рендер
-              addFeed(rssDocument, watchedState); // Тут триггерим рендер в on-watch
+
+              // Добавляем введенный url в стейт только после успешного парсинга
+              state.form.urls.push(value);
+              addPostsAndFeeds(rssDocument, watchedState); // Тут триггерим рендер в on-watch
+            })
+            .catch((er) => {
+              // Тут ловим сетевую ошибку
+              watchedState.form.status = {
+                isValid: false,
+                message: i18nInst.t('errors.network'),
+              };
+              submitBtn.disabled = false;
             });
+          query(val);
         }
       })
-      // Здесь ловим ошибки валидации yup, их сообщения выше загружены через i18n
-      // в yup.setLocale
+      // Здесь ловим ошибки валидации yup, их сообщения выше загружены через i18n в yup.setLocale
       .catch((er) => {
         e.stopPropagation();
         watchedState.form.status = {

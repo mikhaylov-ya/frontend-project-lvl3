@@ -1,31 +1,37 @@
-const addPosts = (html, state) => {
+export default (html, state) => {
+  const feedTitle = html.querySelector('channel > title');
+  const feedDescription = html.querySelector('channel > description') ?? document.createElement('p');
+
   const items = html.querySelectorAll('item');
-  items.forEach((item) => {
+  const posts = [...items].map((item) => {
     const title = item.firstElementChild;
     const pubDate = item.querySelector('pubDate');
-    const description = item.querySelector('description');
+    // Некоторые RSS не содержат эл-нт description (напр у Ведомостей или Investing.com), и чтобы
+    // не ломать их отображение, мы сделаем его пустым
+    const description = item.querySelector('description') ?? document.createElement('p');
     const link = item.querySelector('link');
-    state.form.data.posts.push({
+    return {
       title: title.textContent,
       description: description.textContent,
       link: link.textContent,
       pubDate: new Date(pubDate.textContent),
-    });
-  }); // далее сортируем по дате, чтобы последние посты были сверху
-  state.form.data.posts.sort((a, b) => {
-    const num1 = Number(a.pubDate);
-    const num2 = Number(b.pubDate);
-    return num2 - num1;
+    };
   });
-};
+  // Проверяем, загружали ли мы уже этот поток ранее
+  if (state.form.data.feeds.some((feed) => feed.title === feedTitle.textContent)) {
+    // Тут хитро - в some сравниваем посты в стейте и посты из нынешней выгрузки
+    // отфильтровываем только посты, которых нет в стейте - то есть новые посты
+    const newPosts = posts.filter((post) => !state.form.data.posts
+      .some((postInState) => post.title === postInState.title));
 
-const addFeed = (html, state) => {
-  const title = html.querySelector('title');
-  const description = html.querySelector('description');
+    state.form.data.posts.push(...newPosts);
+    return;
+  }
+
   state.form.data.feeds.push({
-    title: title.textContent,
-    description: description.textContent,
+    title: feedTitle.textContent,
+    description: feedDescription.textContent,
   });
-};
 
-export { addFeed, addPosts };
+  state.form.data.posts.push(...posts);
+};

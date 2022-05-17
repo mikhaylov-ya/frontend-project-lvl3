@@ -43,9 +43,14 @@ const renderPosts = (posts, container) => {
         <p class="card-text">${post.description}</p>
       </div>`;
     return card;
-  };
-
-  const cards = posts.map(createCard);
+  }; // тут сортируем по дате, чтобы последние посты были сверху
+  // в контроллере мы это делать не можем, потому что тогда ломается обновление фида через таймер
+  const sortedPosts = posts.sort((a, b) => {
+    const num1 = Number(a.pubDate);
+    const num2 = Number(b.pubDate);
+    return num2 - num1;
+  });
+  const cards = sortedPosts.map(createCard);
   container.replaceChildren(...cards);
 };
 
@@ -54,7 +59,7 @@ const renderFeeds = (feeds, container) => {
     const feedWrapper = document.createElement('div');
     feedWrapper.innerHTML = `
     <p><b>${feed.title}</b></p>
-    <p>${feed.description}</p>`;
+    <p>${feed?.description}</p>`;
     return feedWrapper;
   });
 
@@ -66,7 +71,7 @@ export default (state, containers) => {
     if (path === 'form.status') {
       renderValidation(val, containers.feedback, containers.form);
     }
-    if (path === 'form.data.feeds') {
+    if (path === 'form.data.posts') {
       renderPosts(state.form.data.posts, containers.posts);
       renderFeeds(state.form.data.feeds, containers.feeds);
     }
