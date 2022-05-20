@@ -3,11 +3,11 @@ export default (html, state) => {
   const feedDescription = html.querySelector('channel > description') ?? document.createElement('p');
 
   const items = html.querySelectorAll('item');
-  const posts = [...items].map((item) => {
+  const posts = [...items].map((item, index) => {
     const title = item.firstElementChild;
     const pubDate = item.querySelector('pubDate');
     // Некоторые RSS не содержат эл-нт description (напр у Ведомостей или Investing.com), и чтобы
-    // не ломать их отображение, мы сделаем его пустым
+    // не ломать их парсинг (а его реализация зависит от браузера), мы создадим пустышку
     const description = item.querySelector('description') ?? document.createElement('p');
     const link = item.querySelector('link');
     return {
@@ -15,23 +15,25 @@ export default (html, state) => {
       description: description.textContent,
       link: link.textContent,
       pubDate: new Date(pubDate.textContent),
+      postId: index,
     };
   });
   // Проверяем, загружали ли мы уже этот поток ранее
-  if (state.form.data.feeds.some((feed) => feed.title === feedTitle.textContent)) {
+  if (state.data.feeds.some((feed) => feed.title === feedTitle.textContent)) {
     // Тут хитро - в some сравниваем посты в стейте и посты из нынешней выгрузки
     // отфильтровываем только посты, которых нет в стейте - то есть новые посты
-    const newPosts = posts.filter((post) => !state.form.data.posts
+    const newPosts = posts.filter((post) => !state.data.posts
       .some((postInState) => post.title === postInState.title));
 
-    state.form.data.posts.push(...newPosts);
-    return;
+    return newPosts.length > 0 ? state.data.posts.push(...newPosts) : null;
   }
 
-  state.form.data.feeds.push({
+  const postsReadState = posts.map(({ postId }) => ({ postId, isRead: false }));
+  state.uiState.posts.push(...postsReadState);
+  state.data.feeds.push({
     title: feedTitle.textContent,
     description: feedDescription.textContent,
   });
-
-  state.form.data.posts.push(...posts);
+  state.data.posts.push(...posts);
+  return null;
 };

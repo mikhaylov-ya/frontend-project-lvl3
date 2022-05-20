@@ -3,20 +3,22 @@ import i18n from 'i18next';
 import axios from 'axios';
 import watcher from './watcher';
 import ru from './locales/ru.js';
-import addPostsAndFeeds from './controller';
+import addContainerAndFeeds from './controller';
 
 export default () => {
   const state = {
-    form: {
-      status: { isValid: {}, message: {} },
-      urls: [],
-      data: {
-        posts: [],
-        feeds: [],
+    uiState: {
+      form: {
+        status: { isValid: {}, message: {} },
       },
+      posts: [],
+    },
+    urls: [],
+    data: {
+      posts: [],
+      feeds: [],
     },
   };
-
   const i18nInst = i18n.createInstance();
   i18nInst.init({
     lng: 'ru',
@@ -30,17 +32,21 @@ export default () => {
     },
     mixed: {
       notOneOf: i18nInst.t('validation.duplicate'),
+      required: i18nInst.t('validation.empty'),
     },
   });
 
-  const urlSchema = yup.string().url();
+  const urlSchema = yup.string().url().required();
   const form = document.querySelector('form');
   const input = form.elements.url;
   const containers = {
     feeds: document.querySelector('.feeds'),
-    posts: document.querySelector('.posts'),
+    postContainer: document.querySelector('.posts'),
     feedback: document.querySelector('.feedback'),
     form: document.querySelector('form'),
+    modalTitle: document.querySelector('.modal-title'),
+    modalDescription: document.querySelector('.modal-body > p'),
+    modalLink: document.querySelector('.modal-link'),
   }; // Контейнеры извлекаем один раз при инициализации, а не при каждом ререндере
   const watchedState = watcher(state, containers);
 
@@ -48,7 +54,7 @@ export default () => {
     const val = input.value;
     e.preventDefault();
     const submitBtn = e.currentTarget.elements.submit;
-    urlSchema.notOneOf(state.form.urls).validate(val, { abortEarly: true })
+    urlSchema.notOneOf(state.urls).validate(val, { abortEarly: true })
       .then((res) => {
         if (res) {
           submitBtn.disabled = true;
@@ -63,7 +69,7 @@ export default () => {
               const streamContent = parser.parseFromString(content, 'application/xml');
               const parserError = streamContent.querySelector('parsererror');
               if (parserError !== null) {
-                watchedState.form.status = {
+                watchedState.uiState.form.status = {
                   isValid: false,
                   message: i18nInst.t('errors.parser'),
                 };
@@ -72,26 +78,27 @@ export default () => {
 
               const rssDocument = streamContent.documentElement;
               setTimeout(() => query(val), 5000);
-              if (state.form.urls.includes(value)) {
-                addPostsAndFeeds(rssDocument, watchedState);
+              if (state.urls.includes(value)) {
+                addContainerAndFeeds(rssDocument, watchedState);
                 return;
               }
 
-              watchedState.form.status = {
+              watchedState.uiState.form.status = {
                 isValid: true,
                 message: i18nInst.t('validation.success'),
               };
 
               // Добавляем введенный url в стейт только после успешного парсинга
-              state.form.urls.push(value);
-              addPostsAndFeeds(rssDocument, watchedState); // Тут триггерим рендер в on-watch
+              state.urls.push(value);
+              addContainerAndFeeds(rssDocument, watchedState); // Тут триггерим рендер в on-watch
             })
             .catch((er) => {
               // Тут ловим сетевую ошибку
-              watchedState.form.status = {
+              watchedState.uiState.form.status = {
                 isValid: false,
                 message: i18nInst.t('errors.network'),
               };
+              console.log(er);
               submitBtn.disabled = false;
             });
           query(val);
@@ -100,7 +107,7 @@ export default () => {
       // Здесь ловим ошибки валидации yup, их сообщения выше загружены через i18n в yup.setLocale
       .catch((er) => {
         e.stopPropagation();
-        watchedState.form.status = {
+        watchedState.uiState.form.status = {
           isValid: false,
           message: er.errors.toString(),
         };

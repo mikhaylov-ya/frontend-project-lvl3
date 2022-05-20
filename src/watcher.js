@@ -24,11 +24,10 @@ const renderValidation = (status, feedbackMsgElem, form) => {
   }
 };
 
-const renderPosts = (posts, container) => {
+const renderPosts = (posts, containers) => {
+  const { modalTitle, modalDescription, modalLink, postContainer } = containers;
   const createCard = (post) => {
-    const card = document.createElement('div');
-    card.classList.add('card', 'my-3');
-    const date = post.pubDate;
+    const { pubDate, link, title, description, postId } = post;
     const dateOptions = {
       month: 'long',
       year: 'numeric',
@@ -36,12 +35,43 @@ const renderPosts = (posts, container) => {
       hour: 'numeric',
       minute: 'numeric',
     };
-    card.innerHTML = `
-      <div class="card-body">
-        <h5 class="card-title"><a class="card-link" href="${post.link}" target="_blank">${post.title}</a></h5>
-        <h6 class="card-subtitle mb-2">${date.toLocaleDateString('ru-RU', dateOptions)}</h6>
-        <p class="card-text">${post.description}</p>
-      </div>`;
+
+    const card = document.createElement('div');
+    card.classList.add('card-body', 'my-3');
+    const cardTitle = document.createElement('h5');
+    cardTitle.classList.add('card-title');
+    const cardLink = document.createElement('a');
+    cardLink.href = link;
+    cardLink.classList.add('card-link', 'fw-bold');
+    cardLink.dataset.id = postId;
+    cardLink.target = '_blank';
+    cardLink.textContent = title;
+    const cardSubtitle = document.createElement('h6');
+    cardSubtitle.classList.add('card-subtitle', 'mb-2');
+    cardSubtitle.textContent = pubDate.toLocaleDateString('ru-RU', dateOptions);
+    const buttonModal = document.createElement('button');
+    buttonModal.classList.add('btn', 'btn-outline-dark');
+    buttonModal.dataset.id = postId;
+    buttonModal.dataset.bsToggle = 'modal';
+    buttonModal.dataset.bsTarget = '#previewModal';
+    buttonModal.textContent = 'Подробнее';
+    cardTitle.append(cardLink);
+    card.append(cardTitle, cardSubtitle, buttonModal);
+
+    buttonModal.addEventListener('click', () => {
+      modalTitle.textContent = title;
+      modalDescription.textContent = description;
+      modalLink.setAttribute('href', link);
+    });
+
+    [cardLink, buttonModal].forEach((elem) => elem.addEventListener('click', (e) => {
+      const { id } = e.target.dataset;
+      // const targetPost = state.uiState.posts.find(({ postId }) => postId === id);
+      // console.log(targetPost);
+      const wow = document.querySelector(`.card-link[data-id="${id}"]`);
+      wow.classList.remove('fw-bold');
+      wow.classList.add('fw-normal');
+    }));
     return card;
   }; // тут сортируем по дате, чтобы последние посты были сверху
   // в контроллере мы это делать не можем, потому что тогда ломается обновление фида через таймер
@@ -51,7 +81,7 @@ const renderPosts = (posts, container) => {
     return num2 - num1;
   });
   const cards = sortedPosts.map(createCard);
-  container.replaceChildren(...cards);
+  postContainer.replaceChildren(...cards);
 };
 
 const renderFeeds = (feeds, container) => {
@@ -59,7 +89,7 @@ const renderFeeds = (feeds, container) => {
     const feedWrapper = document.createElement('div');
     feedWrapper.innerHTML = `
     <p><b>${feed.title}</b></p>
-    <p>${feed?.description}</p>`;
+    <p>${feed.description}</p>`;
     return feedWrapper;
   });
 
@@ -68,12 +98,12 @@ const renderFeeds = (feeds, container) => {
 
 export default (state, containers) => {
   const watchedState = onChange(state, (path, val) => {
-    if (path === 'form.status') {
+    if (path === 'uiState.form.status') {
       renderValidation(val, containers.feedback, containers.form);
     }
-    if (path === 'form.data.posts') {
-      renderPosts(state.form.data.posts, containers.posts);
-      renderFeeds(state.form.data.feeds, containers.feeds);
+    if (path === 'data.posts') {
+      renderPosts(state.data.posts, containers);
+      renderFeeds(state.data.feeds, containers.feeds);
     }
   });
   return watchedState;

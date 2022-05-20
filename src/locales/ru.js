@@ -1,13 +1,14 @@
 export default {
   translation: {
     validation: {
-      duplicate: 'RSS уже добавлен в фид',
-      wrongUrl: 'Пожалуйста, введите корректный URL',
+      duplicate: 'RSS уже существует',
+      wrongUrl: 'Ссылка должна быть валидным URL',
+      empty: 'Не должно быть пустым',
       success: 'RSS успешно загружен',
     },
     errors: {
-      network: 'Сетевая ошибка, сорян',
-      parser: 'Некорректный RSS, попробуйте другой',
+      network: 'Ошибка сети',
+      parser: 'Ресурс не содержит валидный RSS',
     },
   },
 };

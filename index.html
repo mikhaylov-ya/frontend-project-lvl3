@@ -5,6 +5,24 @@
         <title>RSS Feed Project</title>
     </head>
     <body class="d-flex flex-column min-vh-100" data-new-gr-c-s-check-loaded="8.898.0" data-gr-ext-installed="">
+        <div class="modal fade" tabindex="-1" id="previewModal" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title"></h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+              <div class="modal-body text-break">
+                <p></p>
+              </div>
+              <div class="modal-footer">
+                <a class="btn btn-primary modal-link" target="_blank" role="button">Перейти</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     <main class="flex-grow-1">
         <section class="container-md bg-dark p-5">
             <div class="row">
@@ -24,7 +42,7 @@
                             </div>
                         </div>
                     </form>
-                    <p class="mt-2 mb-0 text-muted">Пример: https://ru.hexlet.io/lessons.rss</p>
+                    <p class="mt-2 mb-0 text-muted">Пример: https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml</p>
                     <p class="feedback m-0 position-absolute small"></p>
                 </div>
             </div>
