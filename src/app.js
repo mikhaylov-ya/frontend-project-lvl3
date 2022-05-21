@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import axios from 'axios';
 import watcher from './watcher';
 import ru from './locales/ru.js';
-import addContainerAndFeeds from './controller';
+import addPostsAndFeeds from './controller';
 
 export default () => {
   const state = {
@@ -79,7 +79,7 @@ export default () => {
               const rssDocument = streamContent.documentElement;
               setTimeout(() => query(val), 5000);
               if (state.urls.includes(value)) {
-                addContainerAndFeeds(rssDocument, watchedState);
+                addPostsAndFeeds(rssDocument, watchedState);
                 return;
               }
 
@@ -90,7 +90,7 @@ export default () => {
 
               // Добавляем введенный url в стейт только после успешного парсинга
               state.urls.push(value);
-              addContainerAndFeeds(rssDocument, watchedState); // Тут триггерим рендер в on-watch
+              addPostsAndFeeds(rssDocument, watchedState); // Тут триггерим рендер в on-watch
             })
             .catch((er) => {
               // Тут ловим сетевую ошибку

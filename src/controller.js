@@ -29,11 +29,11 @@ export default (html, state) => {
   }
 
   const postsReadState = posts.map(({ postId }) => ({ postId, isRead: false }));
-  state.uiState.posts.push(...postsReadState);
   state.data.feeds.push({
     title: feedTitle.textContent,
     description: feedDescription.textContent,
   });
   state.data.posts.push(...posts);
+  state.uiState.posts.push(...postsReadState);
   return null;
 };

@@ -24,7 +24,15 @@ const renderValidation = (status, feedbackMsgElem, form) => {
   }
 };
 
-const renderPosts = (posts, containers) => {
+const changeReadStatus = (id, postsUI) => {
+  const targetPost = postsUI.find((el) => el.postId === Number(id));
+  targetPost.isRead = true;
+  const wow = document.querySelector(`.card-link[data-id="${id}"]`);
+  wow.classList.remove('fw-bold');
+  wow.classList.add('fw-normal');
+};
+
+const renderPosts = (state, containers) => {
   const { modalTitle, modalDescription, modalLink, postContainer } = containers;
   const createCard = (post) => {
     const { pubDate, link, title, description, postId } = post;
@@ -66,16 +74,12 @@ const renderPosts = (posts, containers) => {
 
     [cardLink, buttonModal].forEach((elem) => elem.addEventListener('click', (e) => {
       const { id } = e.target.dataset;
-      // const targetPost = state.uiState.posts.find(({ postId }) => postId === id);
-      // console.log(targetPost);
-      const wow = document.querySelector(`.card-link[data-id="${id}"]`);
-      wow.classList.remove('fw-bold');
-      wow.classList.add('fw-normal');
+      changeReadStatus(id, state.uiState.posts);
     }));
     return card;
   }; // тут сортируем по дате, чтобы последние посты были сверху
   // в контроллере мы это делать не можем, потому что тогда ломается обновление фида через таймер
-  const sortedPosts = posts.sort((a, b) => {
+  const sortedPosts = state.data.posts.sort((a, b) => {
     const num1 = Number(a.pubDate);
     const num2 = Number(b.pubDate);
     return num2 - num1;
@@ -98,11 +102,12 @@ const renderFeeds = (feeds, container) => {
 
 export default (state, containers) => {
   const watchedState = onChange(state, (path, val) => {
+    console.log(val);
     if (path === 'uiState.form.status') {
       renderValidation(val, containers.feedback, containers.form);
     }
     if (path === 'data.posts') {
-      renderPosts(state.data.posts, containers);
+      renderPosts(state, containers);
       renderFeeds(state.data.feeds, containers.feeds);
     }
   });
