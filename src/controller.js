@@ -28,12 +28,12 @@ export default (html, state) => {
     return newPosts.length > 0 ? state.data.posts.push(...newPosts) : null;
   }
 
-  const postsReadState = posts.map(({ postId }) => ({ postId, isRead: false }));
+  const postsId = posts.map(({ postId }) => postId);
   state.data.feeds.push({
     title: feedTitle.textContent,
     description: feedDescription.textContent,
   });
+  state.uiState.notReadPosts.push(...postsId);
   state.data.posts.push(...posts);
-  state.uiState.posts.push(...postsReadState);
   return null;
 };

@@ -11,7 +11,8 @@ export default () => {
       form: {
         status: { isValid: {}, message: {} },
       },
-      posts: [],
+      readPosts: [],
+      notReadPosts: [],
     },
     urls: [],
     data: {
@@ -37,8 +38,6 @@ export default () => {
   });
 
   const urlSchema = yup.string().url().required();
-  const form = document.querySelector('form');
-  const input = form.elements.url;
   const containers = {
     feeds: document.querySelector('.feeds'),
     postContainer: document.querySelector('.posts'),
@@ -50,7 +49,8 @@ export default () => {
   }; // Контейнеры извлекаем один раз при инициализации, а не при каждом ререндере
   const watchedState = watcher(state, containers);
 
-  form.addEventListener('submit', (e) => {
+  containers.form.addEventListener('submit', (e) => {
+    const input = e.target.elements.url;
     const val = input.value;
     e.preventDefault();
     const submitBtn = e.currentTarget.elements.submit;
@@ -98,7 +98,7 @@ export default () => {
                 isValid: false,
                 message: i18nInst.t('errors.network'),
               };
-              console.log(er);
+              console.error(er);
               submitBtn.disabled = false;
             });
           query(val);

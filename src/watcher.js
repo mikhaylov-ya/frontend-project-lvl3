@@ -24,14 +24,6 @@ const renderValidation = (status, feedbackMsgElem, form) => {
   }
 };
 
-const changeReadStatus = (id, postsUI) => {
-  const targetPost = postsUI.find((el) => el.postId === Number(id));
-  targetPost.isRead = true;
-  const wow = document.querySelector(`.card-link[data-id="${id}"]`);
-  wow.classList.remove('fw-bold');
-  wow.classList.add('fw-normal');
-};
-
 const renderPosts = (state, containers) => {
   const { modalTitle, modalDescription, modalLink, postContainer } = containers;
   const createCard = (post) => {
@@ -50,7 +42,8 @@ const renderPosts = (state, containers) => {
     cardTitle.classList.add('card-title');
     const cardLink = document.createElement('a');
     cardLink.href = link;
-    cardLink.classList.add('card-link', 'fw-bold');
+    const readStatus = state.uiState.notReadPosts.includes(postId) ? 'fw-bold' : 'fw-normal';
+    cardLink.classList.add(readStatus);
     cardLink.dataset.id = postId;
     cardLink.target = '_blank';
     cardLink.textContent = title;
@@ -74,7 +67,8 @@ const renderPosts = (state, containers) => {
 
     [cardLink, buttonModal].forEach((elem) => elem.addEventListener('click', (e) => {
       const { id } = e.target.dataset;
-      changeReadStatus(id, state.uiState.posts);
+      state.uiState.notReadPosts = state.uiState.notReadPosts.filter((el) => el !== Number(id));
+      state.uiState.readPosts.push(id);
     }));
     return card;
   }; // тут сортируем по дате, чтобы последние посты были сверху
@@ -102,13 +96,19 @@ const renderFeeds = (feeds, container) => {
 
 export default (state, containers) => {
   const watchedState = onChange(state, (path, val) => {
-    console.log(val);
     if (path === 'uiState.form.status') {
       renderValidation(val, containers.feedback, containers.form);
     }
     if (path === 'data.posts') {
-      renderPosts(state, containers);
+      renderPosts(watchedState, containers);
       renderFeeds(state.data.feeds, containers.feeds);
+    }
+    if (path === 'uiState.readPosts') {
+      val.forEach((id) => {
+        const post = document.querySelector(`a[data-id="${id}"]`);
+        post.classList.remove('fw-bold');
+        post.classList.add('fw-normal');
+      });
     }
   });
   return watchedState;
