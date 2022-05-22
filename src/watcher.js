@@ -55,7 +55,7 @@ const renderPosts = (state, containers) => {
     buttonModal.dataset.id = postId;
     buttonModal.dataset.bsToggle = 'modal';
     buttonModal.dataset.bsTarget = '#previewModal';
-    buttonModal.textContent = 'Подробнее';
+    buttonModal.textContent = 'Просмотр';
     cardTitle.append(cardLink);
     card.append(cardTitle, cardSubtitle, buttonModal);
 
