@@ -25,9 +25,14 @@ const renderValidation = (status, feedbackMsgElem, form) => {
 };
 
 const renderPosts = (state, containers) => {
-  const { modalTitle, modalDescription, modalLink, postContainer } = containers;
+  const {
+    modalTitle, modalDescription, modalLink, postContainer,
+  } = containers;
   const createCard = (post) => {
-    const { pubDate, link, title, description, postId } = post;
+    const {
+      pubDate, link, title, description, postId,
+    } = post;
+
     const dateOptions = {
       month: 'long',
       year: 'numeric',
