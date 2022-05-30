@@ -101,12 +101,32 @@ const renderFeeds = (feeds, container) => {
 
 export default (state, containers) => {
   const watchedState = onChange(state, (path, val) => {
+    // не знаю как сюда прокинуть другие данные - это же view, а не controller, а зачем перегружать
+    // контроллер свичом с выделенным процессом я не понимаю, процесс там и так неявно работает
+    if (path === 'addingFeedProcess') {
+      switch (val) {
+        case 'ready':
+          state.uiState.form.disableSubmitBtn = false;
+          break;
+        case 'processing':
+          state.uiState.form.disableSubmitBtn = true;
+          break;
+        case 'error':
+          state.uiState.form.disableSubmitBtn = false;
+          break;
+        default:
+          throw new Error(`Unknown process state: ${val}`);
+      }
+    }
     if (path === 'uiState.form.status') {
       renderValidation(val, containers.feedback, containers.form);
     }
     if (path === 'data.posts') {
       renderPosts(watchedState, containers);
       renderFeeds(state.data.feeds, containers.feeds);
+    }
+    if (path === 'uiState.form.disableSubmitBtn') {
+      containers.submitBtn.disabled = val;
     }
     if (path === 'uiState.readPosts') {
       val.forEach((id) => {
@@ -115,6 +135,10 @@ export default (state, containers) => {
         post.classList.add('fw-normal');
       });
     }
+    if (path === 'uiState.addingFeedProcess') {
+      return null;
+    }
+    return null;
   });
   return watchedState;
 };
