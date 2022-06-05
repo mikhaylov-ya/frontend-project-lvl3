@@ -1,12 +1,13 @@
 /* eslint-disable no-param-reassign */
 import onChange from 'on-change';
 
-const renderValidation = (status, feedbackMsgElem, form) => {
+const renderValidation = (state, feedbackMsgElem, form, translator) => {
   const input = form.elements.url;
-  feedbackMsgElem.textContent = status.message;
+  console.log(state.uiState.form.message);
+  feedbackMsgElem.textContent = translator.t(state.uiState.form.message);
 
-  switch (status.isValid) {
-    case true:
+  switch (state.addingFeedProcess) {
+    case 'ready':
       feedbackMsgElem.classList.remove('text-danger');
       feedbackMsgElem.classList.add('text-success');
       input.classList.remove('is-invalid');
@@ -14,7 +15,7 @@ const renderValidation = (status, feedbackMsgElem, form) => {
       form.reset();
       input.focus();
       break;
-    case false:
+    case 'error':
       feedbackMsgElem.classList.add('text-danger');
       input.classList.add('is-invalid');
       input.classList.remove('is-valid');
@@ -54,7 +55,8 @@ const renderPosts = (state, containers) => {
     cardLink.textContent = title;
     const cardSubtitle = document.createElement('h6');
     cardSubtitle.classList.add('card-subtitle', 'mb-2');
-    cardSubtitle.textContent = pubDate.toLocaleDateString('ru-RU', dateOptions);
+    cardSubtitle.textContent = new Date(pubDate)
+      .toLocaleDateString('ru-RU', dateOptions);
     const buttonModal = document.createElement('button');
     buttonModal.classList.add('btn', 'btn-outline-dark');
     buttonModal.dataset.id = postId;
@@ -99,34 +101,28 @@ const renderFeeds = (feeds, container) => {
   container.replaceChildren(...feedElems);
 };
 
-export default (state, containers) => {
+export default (state, containers, i18nInst) => {
+  const mapping = {
+    ready: () => {
+      containers.submitBtn.disabled = false;
+      renderValidation(state, containers.feedback, containers.form, i18nInst);
+    },
+    error: () => {
+      containers.submitBtn.disabled = false;
+      renderValidation(state, containers.feedback, containers.form, i18nInst);
+    },
+    processing: () => {
+      containers.submitBtn.disabled = true;
+    },
+  };
+
   const watchedState = onChange(state, (path, val) => {
-    // не знаю как сюда прокинуть другие данные - это же view, а не controller, а зачем перегружать
-    // контроллер свичом с выделенным процессом я не понимаю, процесс там и так неявно работает
     if (path === 'addingFeedProcess') {
-      switch (val) {
-        case 'ready':
-          state.uiState.form.disableSubmitBtn = false;
-          break;
-        case 'processing':
-          state.uiState.form.disableSubmitBtn = true;
-          break;
-        case 'error':
-          state.uiState.form.disableSubmitBtn = false;
-          break;
-        default:
-          throw new Error(`Unknown process state: ${val}`);
-      }
-    }
-    if (path === 'uiState.form.status') {
-      renderValidation(val, containers.feedback, containers.form);
+      mapping[val]();
     }
     if (path === 'data.posts') {
       renderPosts(watchedState, containers);
       renderFeeds(state.data.feeds, containers.feeds);
-    }
-    if (path === 'uiState.form.disableSubmitBtn') {
-      containers.submitBtn.disabled = val;
     }
     if (path === 'uiState.readPosts') {
       val.forEach((id) => {
@@ -134,9 +130,6 @@ export default (state, containers) => {
         post.classList.remove('fw-bold');
         post.classList.add('fw-normal');
       });
-    }
-    if (path === 'uiState.addingFeedProcess') {
-      return null;
     }
     return null;
   });
