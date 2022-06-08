@@ -3,19 +3,19 @@ import onChange from 'on-change';
 
 const renderValidation = (state, feedbackMsgElem, form, translator) => {
   const input = form.elements.url;
-  console.log(state.uiState.form.message);
-  feedbackMsgElem.textContent = translator.t(state.uiState.form.message);
 
   switch (state.addingFeedProcess) {
     case 'ready':
       feedbackMsgElem.classList.remove('text-danger');
       feedbackMsgElem.classList.add('text-success');
+      feedbackMsgElem.textContent = translator.t('validation.success');
       input.classList.remove('is-invalid');
       input.classList.add('is-valid');
       form.reset();
       input.focus();
       break;
     case 'error':
+      feedbackMsgElem.textContent = translator.t(state.uiState.form.error);
       feedbackMsgElem.classList.add('text-danger');
       input.classList.add('is-invalid');
       input.classList.remove('is-valid');
@@ -27,11 +27,11 @@ const renderValidation = (state, feedbackMsgElem, form, translator) => {
 
 const renderPosts = (state, containers) => {
   const {
-    modalTitle, modalDescription, modalLink, postContainer,
+    postContainer,
   } = containers;
   const createCard = (post) => {
     const {
-      pubDate, link, title, description, postId,
+      pubDate, link, title, postId,
     } = post;
 
     const dateOptions = {
@@ -48,7 +48,7 @@ const renderPosts = (state, containers) => {
     cardTitle.classList.add('card-title');
     const cardLink = document.createElement('a');
     cardLink.href = link;
-    const readStatus = state.uiState.notReadPosts.includes(postId) ? 'fw-bold' : 'fw-normal';
+    const readStatus = state.uiState.readPosts.includes(postId) ? 'fw-normal' : 'fw-bold';
     cardLink.classList.add(readStatus);
     cardLink.dataset.id = postId;
     cardLink.target = '_blank';
@@ -66,20 +66,20 @@ const renderPosts = (state, containers) => {
     cardTitle.append(cardLink);
     card.append(cardTitle, cardSubtitle, buttonModal);
 
-    buttonModal.addEventListener('click', () => {
-      modalTitle.textContent = title;
-      modalDescription.textContent = description;
-      modalLink.setAttribute('href', link);
-    });
+    postContainer.addEventListener('click', (e) => {
+      e.stopImmediatePropagation();
+      const { id, bsToggle } = e.target.dataset;
+      if (!id) return;
 
-    [cardLink, buttonModal].forEach((elem) => elem.addEventListener('click', (e) => {
-      const { id } = e.target.dataset;
-      state.uiState.notReadPosts = state.uiState.notReadPosts.filter((el) => el !== Number(id));
+      if (bsToggle === 'modal') {
+        state.uiState.currModal = postId;
+      }
+
       state.uiState.readPosts.push(id);
-    }));
+    });
     return card;
-  }; // тут сортируем по дате, чтобы последние посты были сверху
-  // в контроллере мы это делать не можем, потому что тогда ломается обновление фида через таймер
+  };
+
   const sortedPosts = state.data.posts.sort((a, b) => {
     const num1 = Number(a.pubDate);
     const num2 = Number(b.pubDate);
@@ -92,9 +92,12 @@ const renderPosts = (state, containers) => {
 const renderFeeds = (feeds, container) => {
   const feedElems = feeds.map((feed) => {
     const feedWrapper = document.createElement('div');
-    feedWrapper.innerHTML = `
-    <p><b>${feed.title}</b></p>
-    <p>${feed.description}</p>`;
+    const feedTitle = document.createElement('p');
+    feedTitle.classList.add('fw-bold');
+    feedTitle.textContent = feed.title;
+    const feedDescription = document.createElement('p');
+    feedDescription.textContent = feed.description;
+    feedWrapper.append(feedTitle, feedDescription);
     return feedWrapper;
   });
 
@@ -102,6 +105,7 @@ const renderFeeds = (feeds, container) => {
 };
 
 export default (state, containers, i18nInst) => {
+  const { modalDescription, modalTitle, modalLink } = containers;
   const mapping = {
     ready: () => {
       containers.submitBtn.disabled = false;
@@ -130,6 +134,13 @@ export default (state, containers, i18nInst) => {
         post.classList.remove('fw-bold');
         post.classList.add('fw-normal');
       });
+    }
+    if (path === 'uiState.currModal') {
+      const post = state.data.posts.find(({ postId }) => postId === val);
+      const { title, description, link } = post;
+      modalTitle.textContent = title;
+      modalDescription.textContent = description;
+      modalLink.setAttribute('href', link);
     }
     return null;
   });

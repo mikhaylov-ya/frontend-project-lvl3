@@ -9,7 +9,6 @@ const createProxy = (link) => {
   const proxy = new URL('https://allorigins.hexlet.app/get?');
   const params = proxy.searchParams;
   params.append('disableCache', true);
-  // при вызове encodeURIComponent с link ссылка не собирается и парсер падает с ошибкой
   params.append('url', link);
   return proxy;
 };
@@ -44,13 +43,15 @@ const updateFeeds = (state) => {
 export default () => {
   const state = {
     uiState: {
+      currModal: '',
       form: {
-        message: '',
+        error: '',
       },
-      addingFeedProcess: '', // ready, processing, error
+      addingFeedProcess: 'ready', // ready, processing, error
       readPosts: [],
-      notReadPosts: [],
     },
+    // урлы есть где-то в фидах, но под разными тегами в зависимости от сайта, и чтобы их достать
+    // может понадобиться громоздкая логика. безопаснее и проще сразу брать из инпута
     urls: [],
     data: {
       posts: [],
@@ -86,13 +87,11 @@ export default () => {
     modalLink: document.querySelector('.modal-link'),
   }; // Контейнеры извлекаем один раз при инициализации, а не при каждом ререндере
   const watchedState = watcher(state, containers, i18nInst);
-  watchedState.addingFeedProcess = 'ready';
 
   updateFeeds(watchedState);
   containers.form.addEventListener('submit', (e) => {
     watchedState.addingFeedProcess = 'processing';
 
-    // я знаю про FormData, но решил без лишних прокладок извлечь этот элемент из формы
     const input = e.target.elements.url;
     const val = input.value;
 
@@ -104,20 +103,17 @@ export default () => {
             const content = response.data.contents;
             const { posts, feed } = parse(content);
             state.urls.push(input.value);
-            state.uiState.form.message = 'validation.success';
-            watchedState.addingFeedProcess = 'ready';
 
-            const postsId = posts.map(({ postId }) => postId);
             state.data.feeds.push({
               title: feed.feedTitle.textContent,
               description: feed.feedDescription.textContent,
             });
-            state.uiState.notReadPosts.push(...postsId);
             watchedState.data.posts.push(...posts); // триггерим рендер
+            watchedState.addingFeedProcess = 'ready';
           })
           .catch((er) => {
             // Тут ловим сетевую ошибку или ошибку парсера
-            state.uiState.form.message = er.message === 'errors.parser'
+            state.uiState.form.error = er.message === 'errors.parser'
               ? er.message : 'errors.network';
             watchedState.addingFeedProcess = 'error';
             console.error(er.message);
@@ -129,7 +125,7 @@ export default () => {
       .catch((er) => {
         console.error(er.message);
         e.stopPropagation();
-        state.uiState.form.message = er.errors.toString();
+        state.uiState.form.error = er.errors.toString();
         watchedState.addingFeedProcess = 'error';
       });
   }, false);
